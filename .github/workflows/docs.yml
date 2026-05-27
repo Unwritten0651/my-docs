@@ -30,7 +30,8 @@ jobs:
       - name: Check Links
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --verbose --no-progress 'docs/**/*.md' --fail-if-empty false
+          args: --verbose --no-progress 'docs/**/*.md'
+          fail_if_empty: false
 
   # JOB 3: Auf GitHub Pages deployen
   deploy:
