@@ -1,0 +1,58 @@
+name: Docs Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # JOB 1: Markdown-Qualität prüfen
+  lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: "**/*.md"
+
+  # JOB 2: Links prüfen
+  check-links:
+    name: Link Checker
+    runs-on: ubuntu-latest
+    needs: lint          # läuft erst nach erfolgreichem Lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose --no-progress './**/*.md'
+
+  # JOB 3: Auf GitHub Pages deployen
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [lint, check-links]   # nur deployen wenn alles OK
+    if: github.ref == 'refs/heads/main'   # nur auf main-Branch
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
